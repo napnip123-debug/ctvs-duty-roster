@@ -1,20 +1,22 @@
 {
-  "name": "Manamohan CTVS Roster",
+  "name": "CTVS Roster",
   "short_name": "CTVS Roster",
-  "start_url": "index.html",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0d9488",
+  "theme_color": "#7c3aed",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3774/3774299.png",
+      "src": "icon.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3774/3774299.png",
+      "src": "icon.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
