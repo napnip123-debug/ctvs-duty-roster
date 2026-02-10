@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CTVS Roster Manager</title>
+    
+    <!-- LINK TO MANIFEST (CRITICAL FOR INSTALL) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#7c3aed">
+    <link rel="apple-touch-icon" href="icon.png">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -17,11 +23,11 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#7c3aed', // Violet 600
-                        primaryDark: '#6d28d9', // Violet 700
-                        secondary: '#a78bfa', // Violet 400
+                        primary: '#7c3aed',
+                        primaryDark: '#6d28d9',
+                        secondary: '#a78bfa',
                         surface: '#ffffff',
-                        surfaceDark: '#1f2937', // Gray 800
+                        surfaceDark: '#1f2937',
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -33,24 +39,17 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #4b5563; }
         
-        /* Smooth transitions */
-        .transition-all-300 { transition: all 0.3s ease-in-out; }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .dark ::-webkit-scrollbar-thumb { background: #4b5563; }
-        
-        /* Glassmorphism for header */
         .glass {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(0,0,0,0.05);
         }
         .dark .glass {
-            background: rgba(31, 41, 55, 0.8);
+            background: rgba(31, 41, 55, 0.85);
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
     </style>
@@ -58,20 +57,28 @@
 <body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300 min-h-screen flex flex-col">
 
     <!-- Navbar -->
-    <nav class="glass sticky top-0 z-50 px-4 py-4">
+    <nav class="glass sticky top-0 z-50 px-4 py-3 shadow-sm">
         <div class="container mx-auto max-w-5xl flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="bg-primary/10 p-2 rounded-xl text-primary dark:text-secondary">
-                    <i class="fa-solid fa-heart-pulse text-2xl"></i>
+                    <i class="fa-solid fa-heart-pulse text-xl md:text-2xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold tracking-tight text-gray-900 dark:text-white">Manamohan CTVS</h1>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">Roster Generator</p>
+                    <h1 class="text-lg md:text-xl font-bold tracking-tight text-gray-900 dark:text-white">Manamohan CTVS</h1>
+                    <p class="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 font-medium">Roster Generator</p>
                 </div>
             </div>
-            <button id="themeToggle" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition shadow-sm">
-                <!-- Icon injected by JS -->
-            </button>
+            
+            <div class="flex items-center gap-2">
+                <!-- Custom Install Button (Hidden by default) -->
+                <button id="installBtn" class="hidden bg-primary text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg hover:bg-primaryDark transition flex items-center gap-2 animate-pulse">
+                    <i class="fa-solid fa-download"></i> Install App
+                </button>
+
+                <button id="themeToggle" class="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                    <!-- Icon injected by JS -->
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -106,10 +113,10 @@
             </div>
 
             <!-- Dynamic House Officer List -->
-            <div id="hoListContainer" class="hidden animate-fade-in-down">
+            <div id="hoListContainer" class="hidden">
                 <div class="flex justify-between items-end mb-3 border-t dark:border-gray-700 pt-6">
                     <h3 class="font-bold text-lg">House Officer Details</h3>
-                    <div class="text-xs space-x-2 text-gray-500">
+                    <div class="text-xs space-x-2 text-gray-500 hidden md:block">
                         <span class="inline-flex items-center gap-1"><span class="text-lg">🫀</span> Cardiac</span>
                         <span class="inline-flex items-center gap-1"><span class="text-lg">🫁</span> Thoracic</span>
                         <span class="inline-flex items-center gap-1"><span class="text-lg">🩸</span> Vascular</span>
@@ -128,34 +135,34 @@
                     <!-- History Column -->
                     <div class="space-y-4">
                         <h3 class="font-bold text-primary dark:text-secondary flex items-center gap-2">
-                            <i class="fa-solid fa-clock-rotate-left"></i> Previous Month Context
+                            <i class="fa-solid fa-clock-rotate-left"></i> Previous Month
                         </h3>
                         
                         <div class="group">
-                            <label class="block text-xs font-bold text-gray-500 mb-1 group-hover:text-primary transition">Did last month's Thursday duties?</label>
-                            <select id="lastThursdayHO" multiple class="w-full p-2 rounded-xl border dark:border-gray-600 dark:bg-gray-700 text-sm h-24 focus:ring-2 focus:ring-primary outline-none"></select>
-                            <p class="text-[10px] text-gray-400 mt-1">Ctrl+Click to select multiple</p>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Did last month's Thursday duties?</label>
+                            <select id="lastThursdayHO" multiple class="w-full p-2 rounded-xl border dark:border-gray-600 dark:bg-gray-700 text-sm h-20 focus:ring-2 focus:ring-primary outline-none custom-scrollbar"></select>
+                            <p class="text-[10px] text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple</p>
                         </div>
 
                         <div class="group">
-                            <label class="block text-xs font-bold text-gray-500 mb-1 group-hover:text-primary transition">Worked last 3 days of prev month?</label>
-                            <select id="lastMonthEndHO" multiple class="w-full p-2 rounded-xl border dark:border-gray-600 dark:bg-gray-700 text-sm h-24 focus:ring-2 focus:ring-primary outline-none"></select>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Worked last 3 days of prev month?</label>
+                            <select id="lastMonthEndHO" multiple class="w-full p-2 rounded-xl border dark:border-gray-600 dark:bg-gray-700 text-sm h-20 focus:ring-2 focus:ring-primary outline-none custom-scrollbar"></select>
                         </div>
                         
                         <div class="group">
-                            <label class="block text-xs font-bold text-gray-500 mb-1 group-hover:text-primary transition">Worked last full holidays?</label>
-                            <select id="lastFullHolidayHO" multiple class="w-full p-2 rounded-xl border dark:border-gray-600 dark:bg-gray-700 text-sm h-24 focus:ring-2 focus:ring-primary outline-none"></select>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Worked last full holidays?</label>
+                            <select id="lastFullHolidayHO" multiple class="w-full p-2 rounded-xl border dark:border-gray-600 dark:bg-gray-700 text-sm h-20 focus:ring-2 focus:ring-primary outline-none custom-scrollbar"></select>
                         </div>
                     </div>
 
                     <!-- Current Month Column -->
                     <div class="space-y-4">
                         <h3 class="font-bold text-primary dark:text-secondary flex items-center gap-2">
-                            <i class="fa-solid fa-calendar-day"></i> Current Month Specs
+                            <i class="fa-solid fa-calendar-day"></i> Current Month
                         </h3>
                         
                         <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1">Full Holidays (Dates other than Sat)</label>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Full Holidays (Dates)</label>
                             <input type="text" id="fullHolidays" placeholder="e.g. 5, 12" class="w-full p-3 rounded-xl border dark:border-gray-600 dark:bg-gray-700 text-sm focus:ring-2 focus:ring-primary outline-none">
                         </div>
 
@@ -165,8 +172,8 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-gray-500 mb-1">Leave Requests (Day-Name)</label>
-                            <textarea id="leaveRequests" placeholder="e.g. 5-Dr.Ram, 12-Dr.Sita" class="w-full p-3 rounded-xl border dark:border-gray-600 dark:bg-gray-700 text-sm h-24 focus:ring-2 focus:ring-primary outline-none resize-none"></textarea>
+                            <label class="block text-xs font-bold text-gray-500 mb-1">Leave Requests (Date-Name)</label>
+                            <textarea id="leaveRequests" placeholder="e.g. 5-Dr.Ram, 12-Dr.Sita" class="w-full p-3 rounded-xl border dark:border-gray-600 dark:bg-gray-700 text-sm h-20 focus:ring-2 focus:ring-primary outline-none resize-none"></textarea>
                         </div>
                     </div>
                 </div>
@@ -196,7 +203,7 @@
 
                 <!-- Table -->
                 <div class="overflow-hidden rounded-2xl border dark:border-gray-700">
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto custom-scrollbar">
                         <table id="rosterTable" class="w-full text-sm text-left">
                             <thead class="bg-gray-50 dark:bg-gray-750 text-gray-500 uppercase tracking-wider text-xs font-semibold">
                                 <tr>
@@ -221,18 +228,54 @@
 
     </main>
 
-    <!-- Footer -->
     <footer class="mt-auto py-6 text-center text-sm text-gray-500 dark:text-gray-500">
         <p class="font-medium mb-1">&copy; 2026 Manamohan CTVS</p>
         <p class="text-xs opacity-75">Developed by <span class="text-primary dark:text-secondary font-semibold">Dr. Kritik Pokharel</span></p>
     </footer>
 
-    <!-- Logic Script -->
+    <!-- LOGIC SCRIPT -->
     <script>
-        // --- 1. Robust Dark Mode Logic ---
+        // --- SERVICE WORKER REGISTRATION (REQUIRED FOR INSTALL) ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registered'))
+                    .catch(err => console.log('SW Registration Failed:', err));
+            });
+        }
+
+        // --- INSTALL PROMPT LOGIC ---
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Update UI to notify the user they can add to home screen
+            installBtn.classList.remove('hidden');
+        });
+
+        installBtn.addEventListener('click', (e) => {
+            // Hide the app provided install promotion
+            installBtn.classList.add('hidden');
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the A2HS prompt');
+                } else {
+                    console.log('User dismissed the A2HS prompt');
+                }
+                deferredPrompt = null;
+            });
+        });
+
+        // --- DARK MODE LOGIC ---
         const themeToggleBtn = document.getElementById('themeToggle');
         
-        // Function to apply theme
         function applyTheme(isDark) {
             if (isDark) {
                 document.documentElement.classList.add('dark');
@@ -245,29 +288,17 @@
             }
         }
 
-        // Check initial state
         const savedTheme = localStorage.getItem('theme');
         const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        if (savedTheme === 'dark' || (!savedTheme && systemDark)) {
-            applyTheme(true);
-        } else {
-            applyTheme(false);
-        }
+        if (savedTheme === 'dark' || (!savedTheme && systemDark)) applyTheme(true);
+        else applyTheme(false);
 
-        // Toggle Event
         themeToggleBtn.addEventListener('click', () => {
-            const isDark = document.documentElement.classList.contains('dark');
-            applyTheme(!isDark);
+            applyTheme(!document.documentElement.classList.contains('dark'));
         });
 
-
-        // --- 2. App Logic ---
-        const unitIcons = {
-            'Cardiac': '🫀',
-            'Thoracic': '🫁',
-            'Vascular': '🩸'
-        };
+        // --- APP LOGIC ---
+        const unitIcons = { 'Cardiac': '🫀', 'Thoracic': '🫁', 'Vascular': '🩸' };
         const units = ['Cardiac', 'Thoracic', 'Vascular'];
 
         function renderHOInputs() {
@@ -277,17 +308,14 @@
             const advanced = document.getElementById('advancedSettings');
             
             container.innerHTML = '';
-            
             for(let i=0; i<count; i++) {
                 const defaultUnit = units[i % 3];
                 const div = document.createElement('div');
                 div.className = 'flex gap-2 items-center bg-gray-50 dark:bg-gray-700/50 p-2 rounded-xl border border-gray-100 dark:border-gray-600';
                 div.innerHTML = `
-                    <div class="h-8 w-8 rounded-lg bg-white dark:bg-gray-600 flex items-center justify-center text-sm font-bold text-gray-400">
-                        ${i+1}
-                    </div>
+                    <div class="h-8 w-8 rounded-lg bg-white dark:bg-gray-600 flex items-center justify-center text-sm font-bold text-gray-400">${i+1}</div>
                     <input type="text" placeholder="Dr. Name" class="ho-name-input flex-1 bg-transparent border-none focus:ring-0 text-sm dark:text-white placeholder-gray-400" required>
-                    <select class="ho-unit-input bg-white dark:bg-gray-600 border-none text-sm rounded-lg py-1 px-2 focus:ring-0 cursor-pointer">
+                    <select class="ho-unit-input bg-white dark:bg-gray-600 border-none text-sm rounded-lg py-1 px-2 focus:ring-0 cursor-pointer text-gray-700 dark:text-gray-200">
                         <option value="Cardiac" ${defaultUnit==='Cardiac'?'selected':''}>🫀</option>
                         <option value="Thoracic" ${defaultUnit==='Thoracic'?'selected':''}>🫁</option>
                         <option value="Vascular" ${defaultUnit==='Vascular'?'selected':''}>🩸</option>
@@ -295,28 +323,19 @@
                 `;
                 container.appendChild(div);
             }
-
             listContainer.classList.remove('hidden');
             advanced.classList.remove('hidden');
             
-            // Re-bind events for dropdown updates
             document.querySelectorAll('.ho-name-input').forEach(input => {
-                input.addEventListener('input', updateDropdowns); // 'input' is more responsive than 'change'
+                input.addEventListener('input', updateDropdowns);
             });
-            updateDropdowns(); 
-            
-            // Scroll slightly
+            updateDropdowns();
             listContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function updateDropdowns() {
             const names = Array.from(document.querySelectorAll('.ho-name-input')).map((i, idx) => i.value || `Dr. ${idx+1}`);
-            const dropdowns = [
-                document.getElementById('lastThursdayHO'),
-                document.getElementById('lastMonthEndHO'),
-                document.getElementById('lastFullHolidayHO')
-            ];
-
+            const dropdowns = [document.getElementById('lastThursdayHO'), document.getElementById('lastMonthEndHO'), document.getElementById('lastFullHolidayHO')];
             dropdowns.forEach(dd => {
                 const selected = Array.from(dd.selectedOptions).map(o => o.value);
                 dd.innerHTML = '';
@@ -335,18 +354,11 @@
         }
 
         function generateRoster() {
-            // --- Reset Logic ---
-            // We recreate the houseOfficer array from scratch every time function is called.
-            // This acts as the "Reroll" because shuffle functions will yield different results.
-            
-            const monthName = document.getElementById('monthName').value || "Current Month";
             const totalDays = parseInt(document.getElementById('totalDays').value);
             
-            // Build Officer Objects from Inputs
             let houseOfficers = [];
             const nameInputs = document.querySelectorAll('.ho-name-input');
             const unitInputs = document.querySelectorAll('.ho-unit-input');
-            
             nameInputs.forEach((inp, i) => {
                 houseOfficers.push({
                     name: inp.value || `Dr. ${i+1}`,
@@ -360,11 +372,9 @@
             const lastThursdayExcluded = getMultiSelectValues('lastThursdayHO');
             const lastMonthEndExcluded = getMultiSelectValues('lastMonthEndHO');
             const lastFullHolidayExcluded = getMultiSelectValues('lastFullHolidayHO');
-            
             const fullHolidays = document.getElementById('fullHolidays').value.split(/[, ]+/).map(s => parseInt(s)).filter(n => !isNaN(n));
             const halfHolidays = document.getElementById('halfHolidays').value.split(/[, ]+/).map(s => parseInt(s)).filter(n => !isNaN(n));
             
-            // Leave Requests
             const leaveMap = {}; 
             const leaveText = document.getElementById('leaveRequests').value;
             if(leaveText) {
@@ -381,42 +391,22 @@
                 });
             }
 
-            // --- Algorithm Start ---
-            
-            // Initialize History
             houseOfficers.forEach(ho => {
-                if(lastMonthEndExcluded.includes(ho.name)) {
-                    ho.lastDutyDate = 0; // Worked "Day 0"
-                }
+                if(lastMonthEndExcluded.includes(ho.name)) ho.lastDutyDate = 0;
             });
 
             function isAvailable(ho, day, isFullDuty) {
-                // 1. Leave
-                if(leaveMap[day] && leaveMap[day].some(n => ho.name.includes(n))) return false; // Name match check
-                
-                // 2. Post Duty (Next day off)
+                if(leaveMap[day] && leaveMap[day].some(n => ho.name.includes(n))) return false; 
                 if(ho.lastDutyDate === day - 1) return false;
-
-                // 3. Thursday Perk Check (Worked Thursday -> Fri Off & Sat Off)
-                // If today is day X. Did they work Thursday (Day X-2)?
-                // Check if Day X-2 was a Thursday.
-                // Weekday logic: 1=Sun...5=Thu.
-                // If today is Sat (7), then Day-2 is Thu (5).
-                // Logic: if ho.lastDutyDate == day-2, check if day-2 was Thursday.
                 if (ho.lastDutyDate === day - 2) {
                     const prevDay2Weekday = ((day - 2 - 1) % 7) + 1;
-                    if(prevDay2Weekday === 5) return false; // They are on "Saturday Off" perk
+                    if(prevDay2Weekday === 5) return false; 
                 }
-
-                // 4. Fairness on Full Holidays
-                if(isFullDuty && lastFullHolidayExcluded.includes(ho.name) && day < 15) return false; // Hard constraint early month
-
+                if(isFullDuty && lastFullHolidayExcluded.includes(ho.name) && day < 15) return false;
                 return true;
             }
 
-            function shuffle(array) {
-                return array.sort(() => Math.random() - 0.5);
-            }
+            function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
 
             let roster = [];
             let unitCycle = ['Cardiac', 'Thoracic', 'Vascular'];
@@ -426,181 +416,20 @@
                 const weekdayNum = ((day - 1) % 7) + 1; 
                 const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
                 const weekdayStr = weekdayNames[weekdayNum-1];
-                
                 let assigned = [];
                 let type = "Regular";
-
                 const isSat = (weekdayNum === 7);
                 const isFullHoliday = fullHolidays.includes(day);
                 const isThursday = (weekdayNum === 5);
                 
                 if (isSat || isFullHoliday) {
                     type = isSat ? "Saturday (24hr)" : "Full Holiday (24hr)";
-                    
-                    // Candidates available
                     let candidates = houseOfficers.filter(ho => isAvailable(ho, day, true));
-                    
-                    // Sort: Least duties first -> Shuffle ties -> Pick
                     candidates = shuffle(candidates);
                     candidates.sort((a,b) => a.duties - b.duties);
 
-                    // Strategy: Find pair with different units
                     let pairFound = false;
                     for(let i=0; i<candidates.length; i++) {
                         for(let j=i+1; j<candidates.length; j++) {
-                            // Constraint: Different units
                             if(candidates[i].unit !== candidates[j].unit) {
                                 assigned = [candidates[i], candidates[j]];
-                                pairFound = true;
-                                break;
-                            }
-                        }
-                        if(pairFound) break;
-                    }
-                    if(!pairFound && candidates.length >= 2) assigned = [candidates[0], candidates[1]];
-                    
-                } else {
-                    // Weekday
-                    let candidates = houseOfficers.filter(ho => isAvailable(ho, day, false));
-                    
-                    if (isThursday) {
-                        type = "Thursday (Perk)";
-                        // Priority: Those who haven't done thursday yet AND exclude last month's thursday people
-                        let prioritized = candidates.filter(ho => !ho.thursdayDone && !lastThursdayExcluded.includes(ho.name));
-                        if(prioritized.length === 0) prioritized = candidates.filter(ho => !ho.thursdayDone);
-                        if(prioritized.length === 0) prioritized = candidates; // fallback
-
-                        prioritized = shuffle(prioritized);
-                        prioritized.sort((a,b) => a.duties - b.duties);
-                        
-                        if(prioritized.length > 0) assigned = [prioritized[0]];
-
-                    } else {
-                        // Regular Mon/Tue/Wed/Fri
-                        // Unit Cycle Preference
-                        let preferredUnit = unitCycle[unitIndex % 3];
-                        
-                        // Check yesterday's unit to avoid overlap issues if possible
-                        let yesterdaysUnit = null;
-                        if(roster.length > 0 && roster[roster.length-1].names.length === 1) {
-                            yesterdaysUnit = roster[roster.length-1].names[0].unit;
-                        }
-
-                        // Scoring System for candidates
-                        candidates = candidates.map(ho => {
-                            let score = Math.random() * 2; // Random seed for reroll variance
-                            if(ho.unit === preferredUnit) score += 20; // Strong preference for cycle
-                            if(ho.unit === yesterdaysUnit) score -= 15; // Avoid same unit consecutive days
-                            score -= (ho.duties * 10); // Balance duties heavily
-                            return { ho, score };
-                        });
-                        
-                        candidates.sort((a,b) => b.score - a.score);
-                        
-                        if(candidates.length > 0) {
-                            assigned = [candidates[0].ho];
-                            if(!isThursday) unitIndex++; 
-                        }
-                    }
-                }
-
-                // Update Stats
-                assigned.forEach(ho => {
-                    ho.duties++;
-                    ho.lastDutyDate = day;
-                    if(isThursday) ho.thursdayDone = true;
-                });
-
-                if(halfHolidays.includes(day) && !isSat && !isFullHoliday) {
-                    type = "Half Holiday (24hr)";
-                }
-
-                roster.push({
-                    date: day,
-                    weekday: weekdayStr,
-                    names: assigned,
-                    type: type
-                });
-            }
-
-            renderRoster(roster, houseOfficers);
-        }
-
-        function renderRoster(roster, houseOfficers) {
-            const tbody = document.getElementById('rosterBody');
-            tbody.innerHTML = '';
-            
-            roster.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50 dark:hover:bg-gray-700/50 transition border-b dark:border-gray-700 last:border-0";
-                
-                // Color coding rows
-                if(row.weekday === 'Sat' || row.type.includes('Full Holiday')) {
-                    tr.classList.add('bg-red-50/50', 'dark:bg-red-900/10');
-                } else if (row.weekday === 'Thu') {
-                    tr.classList.add('bg-purple-50/50', 'dark:bg-purple-900/10');
-                }
-
-                const namesHtml = row.names.map(h => 
-                    `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white dark:bg-gray-800 border dark:border-gray-600 shadow-sm text-xs font-semibold text-gray-700 dark:text-gray-200">
-                        <span>${unitIcons[h.unit]}</span> ${h.name}
-                    </span>`
-                ).join(' ');
-
-                tr.innerHTML = `
-                    <td class="p-4 font-mono text-gray-500 dark:text-gray-400">${row.date}</td>
-                    <td class="p-4 font-bold text-gray-700 dark:text-gray-300">${row.weekday}</td>
-                    <td class="p-4 flex flex-wrap gap-2">${namesHtml || '<span class="text-red-400 font-bold">Unassigned</span>'}</td>
-                    <td class="p-4 text-xs font-medium text-gray-400 uppercase tracking-wide">${row.type}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            document.getElementById('outputSection').classList.remove('hidden');
-            
-            // Stats
-            const statsDiv = document.getElementById('statsSection');
-            statsDiv.innerHTML = '';
-            
-            // Sort stats by duty count high to low
-            [...houseOfficers].sort((a,b) => b.duties - a.duties).forEach(ho => {
-                const div = document.createElement('div');
-                div.className = "bg-gray-50 dark:bg-gray-700/50 p-2.5 rounded-xl flex justify-between items-center border dark:border-gray-600";
-                div.innerHTML = `
-                    <span class="flex items-center gap-2 font-medium truncate">
-                        ${unitIcons[ho.unit]} ${ho.name}
-                    </span> 
-                    <span class="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-md">${ho.duties}</span>`;
-                statsDiv.appendChild(div);
-            });
-            
-            // Scroll
-            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function exportToExcel() {
-            const rows = document.querySelectorAll('#rosterBody tr');
-            const data = [["Date", "Weekday", "Duty Officers", "Type"]];
-            
-            rows.forEach(row => {
-                const cols = row.querySelectorAll('td');
-                // Extract text from badges
-                const names = Array.from(cols[2].querySelectorAll('span.inline-flex')).map(s => s.innerText.trim()).join(', ');
-                
-                data.push([
-                    cols[0].innerText,
-                    cols[1].innerText,
-                    names,
-                    cols[3].innerText
-                ]);
-            });
-
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Roster");
-            const m = document.getElementById('monthName').value || "Schedule";
-            XLSX.writeFile(wb, `CTVS_Roster_${m}.xlsx`);
-        }
-    </script>
-</body>
-</html>
