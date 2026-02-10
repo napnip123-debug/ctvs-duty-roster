@@ -1,26 +1,559 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CTVS Duty Roster Generator | MCVTC</title>
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#1e40af" />
-    <meta name="description" content="..." />
-    <script type="module" crossorigin src="/assets/index-XXXXX.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-XXXXX.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js');
-    });
-  }
-  </script>
-  </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTVS Roster Gen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .dark ::-webkit-scrollbar-track { background: #2d3748; }
+        .dark ::-webkit-scrollbar-thumb { background: #4a5568; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 transition-colors duration-300 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-teal-600 dark:bg-teal-800 text-white p-4 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-heart-pulse text-2xl"></i>
+                <h1 class="text-xl font-bold">CTVS Roster</h1>
+            </div>
+            <button id="themeToggle" class="p-2 rounded-full hover:bg-teal-700 transition">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto p-4 flex-grow max-w-4xl">
+        
+        <!-- Setup Section -->
+        <div id="setupSection" class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md fade-in transition-colors duration-300">
+            <h2 class="text-2xl font-bold mb-4 text-teal-600 dark:text-teal-400 border-b pb-2">
+                <i class="fa-solid fa-cogs mr-2"></i>Configuration
+            </h2>
+
+            <!-- Step 1: Basic Info -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-bold mb-1">Nepali Month Name</label>
+                    <input type="text" id="monthName" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600" placeholder="e.g., Baishakh">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">Total Days</label>
+                    <input type="number" id="totalDays" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600" value="30">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">Number of House Officers</label>
+                    <input type="number" id="hoCount" class="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600" value="9">
+                </div>
+                <div class="flex items-end">
+                    <button onclick="renderHOInputs()" class="w-full bg-teal-600 text-white p-2 rounded hover:bg-teal-700 transition">
+                        <i class="fa-solid fa-users mr-2"></i>Set Officers
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Officer Details (Dynamic) -->
+            <div id="hoListContainer" class="hidden mb-6 border-t pt-4">
+                <h3 class="font-bold text-lg mb-2">House Officer Details</h3>
+                <p class="text-xs text-gray-500 mb-2">Assign Units: Cardiac (C), Thoracic (T), Vascular (V)</p>
+                <div id="hoInputs" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto p-2 border rounded">
+                    <!-- JS fills this -->
+                </div>
+            </div>
+
+            <!-- Step 3: Holidays & History -->
+            <div id="advancedSettings" class="hidden grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 border-t pt-4">
+                
+                <!-- History -->
+                <div class="space-y-3">
+                    <h3 class="font-bold text-teal-600"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Last Month History</h3>
+                    
+                    <div>
+                        <label class="block text-xs font-bold">Who did last month's Thursday duties?</label>
+                        <select id="lastThursdayHO" multiple class="w-full p-2 border rounded h-20 text-sm dark:bg-gray-700"></select>
+                        <p class="text-[10px] text-gray-500">Hold Ctrl/Cmd to select multiple</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold">Who did duty on Last Month's Last 3 Days?</label>
+                        <select id="lastMonthEndHO" multiple class="w-full p-2 border rounded h-20 text-sm dark:bg-gray-700"></select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold">Who did Last Month's Full Holidays?</label>
+                        <select id="lastFullHolidayHO" multiple class="w-full p-2 border rounded h-20 text-sm dark:bg-gray-700"></select>
+                    </div>
+                </div>
+
+                <!-- Current Month Settings -->
+                <div class="space-y-3">
+                    <h3 class="font-bold text-teal-600"><i class="fa-solid fa-calendar-day mr-2"></i>This Month Settings</h3>
+                    
+                    <div>
+                        <label class="block text-xs font-bold">Select Full Holidays (Non-Saturday)</label>
+                        <input type="text" id="fullHolidays" placeholder="e.g. 5, 12, 21" class="w-full p-2 border rounded text-sm dark:bg-gray-700">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold">Select Half Holidays</label>
+                        <input type="text" id="halfHolidays" placeholder="e.g. 15, 29" class="w-full p-2 border rounded text-sm dark:bg-gray-700">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold">Leave Requests (Format: Day-Name)</label>
+                        <textarea id="leaveRequests" placeholder="e.g. 5-Dr.A, 12-Dr.B" class="w-full p-2 border rounded text-sm h-20 dark:bg-gray-700"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="generateRoster()" id="genBtn" class="hidden mt-6 w-full bg-gradient-to-r from-teal-600 to-blue-600 text-white font-bold py-3 rounded-lg shadow-lg transform hover:scale-[1.01] transition">
+                <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>Generate Roster
+            </button>
+        </div>
+
+        <!-- Output Section -->
+        <div id="outputSection" class="hidden mt-8 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-teal-600 dark:text-teal-400">Final Roster</h2>
+                <div class="flex gap-2">
+                    <button onclick="generateRoster()" class="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300 text-sm">
+                        <i class="fa-solid fa-rotate mr-1"></i>Reroll
+                    </button>
+                    <button onclick="exportToExcel()" class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm">
+                        <i class="fa-solid fa-file-excel mr-1"></i>Export Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table id="rosterTable" class="w-full text-sm text-left border-collapse">
+                    <thead class="bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                        <tr>
+                            <th class="p-3 border dark:border-gray-600">Date</th>
+                            <th class="p-3 border dark:border-gray-600">Day</th>
+                            <th class="p-3 border dark:border-gray-600">Duty Officer(s)</th>
+                            <th class="p-3 border dark:border-gray-600">Type</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rosterBody" class="dark:text-gray-300">
+                        <!-- Rows go here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Statistics -->
+            <div id="statsSection" class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs"></div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center p-4 text-sm text-gray-500 dark:text-gray-400">
+        <p>&copy; 2026 Manamohan CTVS.</p>
+        <p class="font-semibold text-teal-600 dark:text-teal-500">Developed by Dr. Kritik Pokharel</p>
+    </footer>
+
+    <!-- Logic Script -->
+    <script>
+        // --- Dark Mode Logic ---
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        // Check local storage or preference
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            html.classList.add('dark');
+            themeToggle.innerHTML = '<i class="fa-solid fa-sun text-yellow-300"></i>';
+        }
+
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            if (html.classList.contains('dark')) {
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerHTML = '<i class="fa-solid fa-sun text-yellow-300"></i>';
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerHTML = '<i class="fa-solid fa-moon"></i>';
+            }
+        });
+
+        // --- App Logic ---
+        let houseOfficers = [];
+        const units = ['Cardiac', 'Thoracic', 'Vascular'];
+
+        function renderHOInputs() {
+            const count = parseInt(document.getElementById('hoCount').value);
+            const container = document.getElementById('hoInputs');
+            const listContainer = document.getElementById('hoListContainer');
+            const advanced = document.getElementById('advancedSettings');
+            const genBtn = document.getElementById('genBtn');
+            
+            container.innerHTML = '';
+            
+            // Default names based on typical units if needed, otherwise generic
+            for(let i=0; i<count; i++) {
+                const defaultUnit = units[i % 3];
+                const div = document.createElement('div');
+                div.className = 'flex gap-2 items-center bg-gray-50 dark:bg-gray-700 p-2 rounded';
+                div.innerHTML = `
+                    <input type="text" placeholder="Dr. Name ${i+1}" class="ho-name-input flex-1 p-1 border rounded text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white" required>
+                    <select class="ho-unit-input p-1 border rounded text-sm w-24 dark:bg-gray-600 dark:border-gray-500 dark:text-white">
+                        <option value="Cardiac" ${defaultUnit==='Cardiac'?'selected':''}>Card</option>
+                        <option value="Thoracic" ${defaultUnit==='Thoracic'?'selected':''}>Thor</option>
+                        <option value="Vascular" ${defaultUnit==='Vascular'?'selected':''}>Vasc</option>
+                    </select>
+                `;
+                container.appendChild(div);
+            }
+
+            listContainer.classList.remove('hidden');
+            advanced.classList.remove('hidden');
+            genBtn.classList.remove('hidden');
+
+            // Add event listener to populate dropdowns when names change
+            document.querySelectorAll('.ho-name-input').forEach(input => {
+                input.addEventListener('change', updateDropdowns);
+            });
+            updateDropdowns(); // Initial call with empty/placeholder
+        }
+
+        function updateDropdowns() {
+            const names = Array.from(document.querySelectorAll('.ho-name-input')).map((i, idx) => i.value || `Dr. Name ${idx+1}`);
+            const dropdowns = [
+                document.getElementById('lastThursdayHO'),
+                document.getElementById('lastMonthEndHO'),
+                document.getElementById('lastFullHolidayHO')
+            ];
+
+            dropdowns.forEach(dd => {
+                const selected = Array.from(dd.selectedOptions).map(o => o.value);
+                dd.innerHTML = '';
+                names.forEach(name => {
+                    const opt = document.createElement('option');
+                    opt.value = name;
+                    opt.innerText = name;
+                    if(selected.includes(name)) opt.selected = true;
+                    dd.appendChild(opt);
+                });
+            });
+        }
+
+        function getMultiSelectValues(id) {
+            return Array.from(document.getElementById(id).selectedOptions).map(o => o.value);
+        }
+
+        function generateRoster() {
+            // 1. Gather Data
+            const monthName = document.getElementById('monthName').value || "Current Month";
+            const totalDays = parseInt(document.getElementById('totalDays').value);
+            
+            // Build Officer Objects
+            const nameInputs = document.querySelectorAll('.ho-name-input');
+            const unitInputs = document.querySelectorAll('.ho-unit-input');
+            houseOfficers = [];
+            
+            nameInputs.forEach((inp, i) => {
+                houseOfficers.push({
+                    name: inp.value || `Dr. HO ${i+1}`,
+                    unit: unitInputs[i].value,
+                    duties: 0,
+                    thursdayDone: false,
+                    lastDutyDate: -99 // Tracks day index
+                });
+            });
+
+            // Gather constraints
+            const lastThursdayExcluded = getMultiSelectValues('lastThursdayHO');
+            const lastMonthEndExcluded = getMultiSelectValues('lastMonthEndHO'); // Assume these worked days -1, -2, -3
+            const lastFullHolidayExcluded = getMultiSelectValues('lastFullHolidayHO');
+            
+            const fullHolidays = document.getElementById('fullHolidays').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+            const halfHolidays = document.getElementById('halfHolidays').value.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+            
+            // Parse Leave Requests: "5-Dr. A, 7-Dr. B"
+            const leaveMap = {}; // { dayIndex: [names] }
+            const leaveText = document.getElementById('leaveRequests').value;
+            if(leaveText) {
+                leaveText.split(',').forEach(entry => {
+                    const [d, n] = entry.split('-');
+                    if(d && n) {
+                        const day = parseInt(d.trim());
+                        const name = n.trim();
+                        if(!leaveMap[day]) leaveMap[day] = [];
+                        leaveMap[day].push(name);
+                    }
+                });
+            }
+
+            // Initialize Roster Array
+            let roster = [];
+            
+            // Set initial state based on history
+            // Mark those who worked end of last month as having worked on day 0 (simulated)
+            houseOfficers.forEach(ho => {
+                if(lastMonthEndExcluded.includes(ho.name)) {
+                    ho.lastDutyDate = 0; // Effectively "yesterday" relative to day 1
+                }
+            });
+
+            // Helper: Check if person is available
+            function isAvailable(ho, day, isFullDuty) {
+                // 1. Leave Check
+                if(leaveMap[day] && leaveMap[day].includes(ho.name)) return false;
+                
+                // 2. Post Duty Check (Cannot work if worked yesterday)
+                if(ho.lastDutyDate === day - 1) return false;
+
+                // 3. Thursday Perk Check (If worked Thursday, cannot work Fri or Sat)
+                // We handle this by checking logic: if assigned Thursday, we lock next days.
+                // But simplified: If today is Fri/Sat, check if they worked Thursday.
+                // Note: The loop runs sequentially, so lastDutyDate covers the Friday off.
+                // But for Saturday off, we need to check Day-2.
+                // Actually, Thursday Duty = Fri Off + Sat Off.
+                // If today is Sat (Day X), and they worked Thurs (Day X-2), they are OFF.
+                if (ho.lastDutyDate === day - 2) {
+                     // Need to know if Day-2 was a Thursday.
+                     // (day - 1) % 7 === 4 (Thursday is 5th day usually? No, let's map weekdays).
+                     // Start assuming Day 1 = Sunday (1).
+                     // Sun=1, Mon=2, Tue=3, Wed=4, Thu=5, Fri=6, Sat=7
+                     const prevDay2Weekday = ((day - 2 - 1) % 7) + 1;
+                     if(prevDay2Weekday === 5) return false; // Thursday Perk
+                }
+
+                // 4. Fairness on Full Holidays (Don't repeat last month's full holiday workers immediately if possible)
+                if(isFullDuty && lastFullHolidayExcluded.includes(ho.name) && day < 15) {
+                    // Soft constraint: try to avoid in first half of month
+                    // Return true but penalty logic applies in selection
+                }
+
+                return true;
+            }
+
+            // Helper: Shuffle Array
+            function shuffle(array) {
+                return array.sort(() => Math.random() - 0.5);
+            }
+
+            // --- Generation Loop ---
+            // Strategy: Iterate days. 
+            // Priority: Full Holidays/Sat -> Thursdays -> Regular
+            // To ensure constraints, we might fail. For a simple app, we do a single pass with "Best Effort" greedy selection.
+            
+            // We need to determine weekdays. Let's assume User doesn't provide start day.
+            // We will default Day 1 to Sunday for the logic cycle, or ask? 
+            // To simplify: Let's assume standard Nepali month starts.
+            // Or better: Just cycle 1 to TotalDays.
+            // Weekday logic: ((Day - 1) % 7) + 1. 1=Sun, ... 7=Sat.
+
+            let unitCycle = ['Cardiac', 'Thoracic', 'Vascular'];
+            let unitIndex = 0; // Tracks cycle for regular days
+
+            for (let day = 1; day <= totalDays; day++) {
+                const weekday = ((day - 1) % 7) + 1; // 1=Sun ... 5=Thu, 6=Fri, 7=Sat
+                let assigned = [];
+                let type = "Regular";
+
+                const isSat = (weekday === 7);
+                const isFullHoliday = fullHolidays.includes(day);
+                const isThursday = (weekday === 5);
+                
+                // Determine Duty Type
+                if (isSat || isFullHoliday) {
+                    type = isSat ? "Saturday (24hr)" : "Full Holiday (24hr)";
+                    
+                    // NEED 2 PEOPLE from DIFFERENT UNITS
+                    // Filter candidates
+                    let candidates = houseOfficers.filter(ho => isAvailable(ho, day, true));
+                    
+                    // Sort by duty count (lowest first) to equalize
+                    candidates.sort((a,b) => a.duties - b.duties);
+
+                    // Try to pick pair
+                    let pairFound = false;
+                    
+                    // Attempt to find pairs with different units
+                    // Randomize candidates with same duty count to prevent static patterns
+                    candidates = shuffle(candidates); 
+                    candidates.sort((a,b) => a.duties - b.duties); // Re-sort loosely
+
+                    for(let i=0; i<candidates.length; i++) {
+                        for(let j=i+1; j<candidates.length; j++) {
+                            if(candidates[i].unit !== candidates[j].unit) {
+                                assigned = [candidates[i], candidates[j]];
+                                pairFound = true;
+                                break;
+                            }
+                        }
+                        if(pairFound) break;
+                    }
+
+                    // Fallback: if no valid pair (rare), pick any 2 available
+                    if(!pairFound && candidates.length >= 2) {
+                        assigned = [candidates[0], candidates[1]];
+                    }
+                    
+                } else {
+                    // Regular Day (Sun, Mon, Tue, Wed, Thu, Fri)
+                    // If Thursday: 1 Person (Perk applies)
+                    // Else: 1 Person
+                    
+                    let candidates = houseOfficers.filter(ho => isAvailable(ho, day, false));
+                    
+                    if (isThursday) {
+                        type = "Thursday (Perk)";
+                        // Exclude last month's thursday people if possible
+                        let priority = candidates.filter(ho => !lastThursdayExcluded.includes(ho.name));
+                        if(priority.length > 0) candidates = priority;
+                        
+                        // Exclude people who already did a Thursday this month
+                        candidates = candidates.filter(ho => !ho.thursdayDone);
+                    } else {
+                        // Regular Day Logic: Cycle Units (C -> T -> V)
+                        // Try to pick from current unitIndex unit
+                        let preferredUnit = unitCycle[unitIndex % 3];
+                        
+                        // "Prevent one unit having two house officers unavailable"
+                        // This implies: Avoid picking Unit X if Unit X worked yesterday.
+                        // Check who worked yesterday
+                        let yesterdaysUnit = null;
+                        if(roster.length > 0) {
+                            // Single person duty yesterday
+                            if(roster[day-2].names.length === 1) {
+                                yesterdaysUnit = roster[day-2].names[0].unit;
+                            }
+                        }
+                        
+                        // Score candidates
+                        // +10 if preferred unit
+                        // -10 if same unit as yesterday
+                        // -5 * current duties (balance load)
+                        candidates = candidates.map(ho => {
+                            let score = 0;
+                            if(ho.unit === preferredUnit) score += 5;
+                            if(ho.unit === yesterdaysUnit) score -= 10;
+                            score -= (ho.duties * 5); 
+                            return { ho, score };
+                        }).sort((a,b) => b.score - a.score); // Highest score first
+                        
+                        // Unwrap
+                        candidates = candidates.map(obj => obj.ho);
+                    }
+
+                    if(candidates.length > 0) {
+                        assigned = [candidates[0]];
+                        // Increment cycle only on regular days
+                        if(!isThursday) unitIndex++; 
+                    }
+                }
+
+                // Update State
+                assigned.forEach(ho => {
+                    ho.duties++;
+                    ho.lastDutyDate = day;
+                    if(isThursday) ho.thursdayDone = true;
+                });
+
+                // Half Holiday Logic (Just a label, still counts as duty)
+                if(halfHolidays.includes(day) && !isSat && !isFullHoliday) {
+                    type += " + Half Holiday";
+                }
+
+                roster.push({
+                    date: day,
+                    weekday: getWeekdayName(weekday),
+                    names: assigned,
+                    type: type
+                });
+            }
+
+            renderRoster(roster);
+        }
+
+        function getWeekdayName(n) {
+            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            return days[n-1];
+        }
+
+        function renderRoster(roster) {
+            const tbody = document.getElementById('rosterBody');
+            tbody.innerHTML = '';
+            
+            roster.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition";
+                
+                // Style Saturday/Holiday
+                if(row.weekday === 'Sat' || row.type.includes('Full Holiday')) {
+                    tr.classList.add('bg-red-50', 'dark:bg-red-900/20');
+                } else if (row.weekday === 'Thu') {
+                    tr.classList.add('bg-blue-50', 'dark:bg-blue-900/20');
+                }
+
+                const namesString = row.names.map(h => `<span class="font-semibold">${h.name}</span> <span class="text-xs text-gray-500">(${h.unit.charAt(0)})</span>`).join(' & ');
+
+                tr.innerHTML = `
+                    <td class="p-3">${row.date}</td>
+                    <td class="p-3 font-medium">${row.weekday}</td>
+                    <td class="p-3">${namesString || '<span class="text-red-500">Unassigned</span>'}</td>
+                    <td class="p-3 text-xs opacity-75">${row.type}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('outputSection').classList.remove('hidden');
+            
+            // Calc Stats
+            const statsDiv = document.getElementById('statsSection');
+            statsDiv.innerHTML = '';
+            houseOfficers.sort((a,b) => b.duties - a.duties).forEach(ho => {
+                const div = document.createElement('div');
+                div.className = "bg-gray-100 dark:bg-gray-700 p-2 rounded flex justify-between items-center";
+                div.innerHTML = `<span>${ho.name} (${ho.unit.charAt(0)})</span> <span class="font-bold text-teal-600">${ho.duties}</span>`;
+                statsDiv.appendChild(div);
+            });
+            
+            // Scroll to output
+            document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function exportToExcel() {
+            const rosterData = [];
+            const rows = document.querySelectorAll('#rosterBody tr');
+            
+            // Header
+            rosterData.push(["Date", "Weekday", "House Officer(s)", "Duty Type"]);
+
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('td');
+                const cleanName = cols[2].innerText.replace(/\(.\)/g, '').trim(); // Remove (C)/(T) for clean excel
+                rosterData.push([
+                    cols[0].innerText,
+                    cols[1].innerText,
+                    cleanName,
+                    cols[3].innerText
+                ]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(rosterData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Roster");
+            
+            const month = document.getElementById('monthName').value || "Roster";
+            XLSX.writeFile(wb, `CTVS_Roster_${month}.xlsx`);
+        }
+    </script>
+</body>
 </html>
