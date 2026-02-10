@@ -1,7 +1,8 @@
-const CACHE_NAME = 'ctvs-roster-v1';
+const CACHE_NAME = 'ctvs-roster-v2';
 const assets = [
-  '/',
-  '/index.html',
+  './',
+  './index.html',
+  './icon.png',
   'https://cdn.tailwindcss.com',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'
