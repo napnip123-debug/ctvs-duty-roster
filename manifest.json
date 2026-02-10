@@ -1,10 +1,11 @@
 {
-  "name": "CTVS Roster",
+  "name": "Manamohan CTVS Roster",
   "short_name": "CTVS Roster",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#7c3aed",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "icon.png",
